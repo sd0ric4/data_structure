@@ -1,5 +1,5 @@
-#ifndef LINKLIST_H
-#define LINKLIST_H
+#ifndef LIST_H
+#define LIST_H
 
 typedef int ElemType;
 
@@ -9,19 +9,25 @@ typedef struct LNode
     struct LNode *next;
 } LNode, *LinkList;
 
-int InitList(LinkList *L);
-int ClearList(LinkList *L);
+typedef enum
+{
+    OK,
+    ERROR
+} Status;
+
+Status InitList(LinkList *L);
+Status ClearList(LinkList L);
 int ListLength(LinkList L);
-int GetElem(LinkList L, int i, ElemType *e);
+Status GetElem(LinkList L, int i, ElemType *e);
 LNode *LocateElem(LinkList L, ElemType e);
-int ListInsert(LinkList *L, int i, ElemType e);
-int ListDelete(LinkList *L, int i, ElemType *e);
+Status ListInsert(LinkList *L, int i, ElemType e);
+Status ListDelete(LinkList *L, int i, ElemType *e);
 void ListTraverse(LinkList L);
 
-void Union(LinkList *La, LinkList Lb);
-void Intersection(LinkList *La, LinkList Lb);
-void Difference(LinkList *La, LinkList Lb);
-void MergeList(LinkList La, LinkList Lb, LinkList *Lc);
-void Purge(LinkList *Lc);
+Status Union(LinkList *La, LinkList Lb);
+Status Intersection(LinkList *La, LinkList Lb);
+Status Difference(LinkList *La, LinkList Lb);
+Status MergeList(LinkList La, LinkList Lb, LinkList *Lc);
+Status Purge(LinkList *Lc);
 
 #endif
