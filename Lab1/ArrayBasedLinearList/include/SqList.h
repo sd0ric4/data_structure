@@ -21,8 +21,8 @@ typedef int Status;   // 定义函数类型名
 typedef struct SqList
 {
     ElemType *elem; // 顺序表数据存储空间基址
-    int length;
-} SqList; // LIST为用户定义的线性表类型
+    int length;     // 长度
+} SqList;           // LIST为用户定义的线性表类型
 
 Status InitList(SqList *L);
 Status ClearList(SqList *L);
