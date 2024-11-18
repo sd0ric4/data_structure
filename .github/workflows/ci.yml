@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set up build environment
+        run: sudo apt-get update && sudo apt-get install -y make gcc
+      - name: Build and test ArrayBasedLinearList
+        working-directory: ./Lab1/ArrayBasedLinearList
+        run: |
+          make
+          ./build/dist/main
+      - name: Build and test LinkedListBasedLinearList
+        working-directory: ./Lab1/LinkedListBasedLinearList
+        run: |
+          make
+          ./build/dist/main
+      - name: Build and test SequentialStackCircularQueueStorage
+        working-directory: ./Lab1/SequentialStackCircularQueueStorage
+        run: |
+          make
+          ./build/dist/main
+      - name: Build and test StringStorage
+        working-directory: ./Lab1/StringStorage
+        run: |
+          make
+          ./build/dist/main
