@@ -5,9 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef int Status;
-typedef int SElemType;
-typedef int QElemType;
+typedef int Status;    // Status是函数的类型,其值是函数结果状态代码，如OK等
+typedef int SElemType; // SElemType类型根据实际情况而定，这里假设为int
+typedef int QElemType; // QElemType类型根据实际情况而定，这里假设为int
 
 #define STACK_INIT_SIZE 10
 #define STACKINCREMENT 5

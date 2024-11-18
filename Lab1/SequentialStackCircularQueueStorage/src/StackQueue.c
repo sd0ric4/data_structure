@@ -5,6 +5,12 @@
  * 初始化栈, 构造一个空栈
  * @param S 栈指针
  * @return 初始化成功返回1，否则返回0
+ *
+ * 算法实现:
+ * 1. 使用 malloc 分配存储空间。
+ * 2. 检查分配是否成功，若不成功则返回 0。
+ * 3. 设置栈顶指针和栈底指针。
+ * 4. 返回 1。
  */
 Status InitStack(SqStack *S)
 {
@@ -15,20 +21,30 @@ Status InitStack(SqStack *S)
     S->stacksize = STACK_INIT_SIZE;
     return 1;
 }
+
 /**
  * 清空栈
  * @param S 栈指针
  * @return 清空成功返回1
+ *
+ * 算法实现:
+ * 1. 将栈顶指针重置为栈底指针。
+ * 2. 返回 1。
  */
 Status ClearStack(SqStack *S)
 {
     S->top = S->base;
     return 1;
 }
+
 /**
  * 获取栈长度
  * @param S 栈
  * @return 栈长度
+ *
+ * 算法实现:
+ * 1. 计算栈顶指针与栈底指针的差值。
+ * 2. 返回差值。
  */
 int StackLength(SqStack S)
 {
@@ -40,6 +56,11 @@ int StackLength(SqStack S)
  * @param S 栈
  * @param e 保存栈顶元素
  * @return 获取成功返回1，否则返回0
+ *
+ * 算法实现:
+ * 1. 检查栈是否为空。
+ * 2. 若不为空，返回栈顶元素的值。
+ * 3. 若为空，返回 0。
  */
 Status GetTop(SqStack S, SElemType *e)
 {
@@ -48,11 +69,18 @@ Status GetTop(SqStack S, SElemType *e)
     *e = *(S.top - 1);
     return 1;
 }
+
 /**
  * 入栈
  * @param S 栈指针
  * @param e 入栈元素
  * @return 入栈成功返回1，否则返回0
+ *
+ * 算法实现:
+ * 1. 检查栈是否已满。
+ * 2. 若已满，重新分配存储空间。
+ * 3. 将元素 e 压入栈顶。
+ * 4. 返回 1。
  */
 Status Push(SqStack *S, SElemType e)
 {
@@ -69,11 +97,17 @@ Status Push(SqStack *S, SElemType e)
     *S->top++ = e;
     return 1;
 }
+
 /**
  * 出栈
  * @param S 栈指针
  * @param e 保存出栈元素
  * @return 出栈成功返回1，否则返回0
+ *
+ * 算法实现:
+ * 1. 检查栈是否为空。
+ * 2. 若不为空，弹出栈顶元素并返回其值。
+ * 3. 若为空，返回 0。
  */
 Status Pop(SqStack *S, SElemType *e)
 {
@@ -87,6 +121,12 @@ Status Pop(SqStack *S, SElemType *e)
  * 初始化队列
  * @param Q 队列指针
  * @return 初始化成功返回1，否则返回0
+ *
+ * 算法实现:
+ * 1. 使用 malloc 分配存储空间。
+ * 2. 检查分配是否成功，若不成功则返回 0。
+ * 3. 设置队列的 front 和 rear 指针。
+ * 4. 返回 1。
  */
 Status InitQueue(SqQueue *Q)
 {
@@ -101,6 +141,10 @@ Status InitQueue(SqQueue *Q)
  * 清空队列
  * @param Q 队列指针
  * @return 清空成功返回1
+ *
+ * 算法实现:
+ * 1. 将 front 和 rear 指针重置为 0。
+ * 2. 返回 1。
  */
 Status ClearQueue(SqQueue *Q)
 {
@@ -112,6 +156,10 @@ Status ClearQueue(SqQueue *Q)
  * 获取队列长度
  * @param Q 队列
  * @return 队列长度
+ *
+ * 算法实现:
+ * 1. 计算 rear 和 front 指针的差值。
+ * 2. 返回差值。
  */
 int QueueLength(SqQueue Q)
 {
@@ -122,6 +170,10 @@ int QueueLength(SqQueue Q)
  * 判断队列是否为空
  * @param Q 队列
  * @return 为空返回1，否则返回0
+ *
+ * 算法实现:
+ * 1. 检查 front 和 rear 指针是否相等。
+ * 2. 返回检查结果。
  */
 Status QueueEmpty(SqQueue Q)
 {
@@ -132,6 +184,10 @@ Status QueueEmpty(SqQueue Q)
  * 判断队列是否已满
  * @param Q 队列
  * @return 已满返回1，否则返回0
+ *
+ * 算法实现:
+ * 1. 检查 (rear + 1) % MAXQSIZE 是否等于 front。
+ * 2. 返回检查结果。
  */
 Status QueueFull(SqQueue Q)
 {
@@ -143,6 +199,11 @@ Status QueueFull(SqQueue Q)
  * @param Q 队列指针
  * @param e 入队元素
  * @return 入队成功返回1，否则返回0
+ *
+ * 算法实现:
+ * 1. 检查队列是否已满。
+ * 2. 若未满，将元素 e 放入 rear 位置，并更新 rear 指针。
+ * 3. 返回 1。
  */
 Status EnQueue(SqQueue *Q, QElemType e)
 {
@@ -158,6 +219,11 @@ Status EnQueue(SqQueue *Q, QElemType e)
  * @param Q 队列指针
  * @param e 保存出队元素
  * @return 出队成功返回1，否则返回0
+ *
+ * 算法实现:
+ * 1. 检查队列是否为空。
+ * 2. 若不为空，将队头元素出队，并更新 front 指针。
+ * 3. 返回 1。
  */
 Status DeQueue(SqQueue *Q, QElemType *e)
 {
@@ -172,6 +238,11 @@ Status DeQueue(SqQueue *Q, QElemType *e)
  * 功能：将十进制数m转换为n进制数
  * @param m 十进制数
  * @param n n进制数
+ *
+ * 算法实现:
+ * 1. 初始化栈。
+ * 2. 将 m 转换为 n 进制数，并将每位数字压入栈中。
+ * 3. 弹出栈中所有元素，输出转换结果。
  */
 void Conversion(int m, int n)
 {
@@ -196,6 +267,11 @@ void Conversion(int m, int n)
 /**
  * 功能：将队列逆序重排
  * @param Q 队列指针
+ *
+ * 算法实现:
+ * 1. 初始化栈。
+ * 2. 将队列中的所有元素依次出队并压入栈中。
+ * 3. 将栈中的所有元素依次弹出并入队。
  */
 void QueueReverse(SqQueue *Q)
 {

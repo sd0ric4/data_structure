@@ -7,6 +7,10 @@
  * 初始化字符串
  * @param S 字符串
  * @return void
+ *
+ * 算法实现:
+ * 1. 将字符串指针 `ch` 置为 `NULL`。
+ * 2. 将字符串长度 `length` 置为 `0`。
  */
 void InitString(HString *S)
 {
@@ -18,6 +22,11 @@ void InitString(HString *S)
  * 清空字符串
  * @param S 字符串
  * @return void
+ *
+ * 算法实现:
+ * 1. 检查字符串指针 `ch` 是否为空。
+ * 2. 若不为空，释放内存并将 `ch` 置为 `NULL`。
+ * 3. 将字符串长度 `length` 置为 `0`。
  */
 void ClearString(HString *S)
 {
@@ -33,6 +42,11 @@ void ClearString(HString *S)
  * 赋值操作：生成一个其值等于字符串常量 chars 的串 S
  * @param S 字符串
  * @param chars 字符串常量
+ *
+ * 算法实现:
+ * 1. 获取 `chars` 的长度 `len`。
+ * 2. 若 `len` 为 `0`，将 `S` 的 `ch` 置为 `NULL`，`length` 置为 `0`。
+ * 3. 否则，分配 `len` 大小的内存，将 `chars` 复制到 `S` 的 `ch` 中，并设置 `length` 为 `len`。
  */
 void StrAssign(HString *S, const char *chars)
 {
@@ -55,6 +69,11 @@ void StrAssign(HString *S, const char *chars)
  * @param S 字符串 S
  * @param T 字符串 T
  * @return int
+ *
+ * 算法实现:
+ * 1. 获取 `S` 和 `T` 的最小长度 `minLen`。
+ * 2. 逐字符比较 `S` 和 `T`，若不相等则返回比较结果。
+ * 3. 若相等，比较 `S` 和 `T` 的长度，返回比较结果。
  */
 int StrCompare(HString S, HString T)
 {
@@ -75,6 +94,9 @@ int StrCompare(HString S, HString T)
  * 返回字符串长度
  * @param S 字符串
  * @return int
+ *
+ * 算法实现:
+ * 1. 返回 `S` 的 `length`。
  */
 int StrLength(HString S)
 {
@@ -86,6 +108,11 @@ int StrLength(HString S)
  * @param S 新串
  * @param T1 字符串 T1
  * @param T2 字符串 T2
+ *
+ * 算法实现:
+ * 1. 若 `S` 的 `ch` 不为空，释放内存。
+ * 2. 分配 `T1` 和 `T2` 长度之和的内存。
+ * 3. 将 `T1` 和 `T2` 的内容复制到 `S` 的 `ch` 中，并设置 `length`。
  */
 void Concat(HString *S, HString T1, HString T2)
 {
@@ -103,6 +130,11 @@ void Concat(HString *S, HString T1, HString T2)
  * @param S 字符串 S
  * @param pos 起始位置
  * @param len 子串长度
+ *
+ * 算法实现:
+ * 1. 检查 `pos` 和 `len` 的合法性。
+ * 2. 若 `Sub` 的 `ch` 不为空，释放内存。
+ * 3. 分配 `len` 大小的内存，将 `S` 的子串复制到 `Sub` 的 `ch` 中，并设置 `length`。
  */
 void SubString(HString *Sub, HString S, int pos, int len)
 {
@@ -122,6 +154,9 @@ void SubString(HString *Sub, HString S, int pos, int len)
  * 遍历字符串
  * @param S 字符串
  * @return void
+ *
+ * 算法实现:
+ * 1. 逐字符输出 `S` 的 `ch` 中的内容。
  */
 void StrTraverse(HString S)
 {
@@ -136,6 +171,10 @@ void StrTraverse(HString S)
  * 复制操作：由串 T 复制得串 S
  * @param S 字符串 S
  * @param T 字符串 T
+ *
+ * 算法实现:
+ * 1. 若 `S` 的 `ch` 不为空，释放内存。
+ * 2. 分配 `T` 长度的内存，将 `T` 的内容复制到 `S` 的 `ch` 中，并设置 `length`。
  */
 void StrCopy(HString *S, HString T)
 {
@@ -152,6 +191,11 @@ void StrCopy(HString *S, HString T)
  * @param T 子串 T
  * @param pos 起始位置
  * @return int
+ *
+ * 算法实现:
+ * 1. 检查 `pos` 的合法性。
+ * 2. 从 `pos` 开始逐字符比较 `S` 和 `T`，若匹配则返回位置。
+ * 3. 若未匹配，返回 `0`。
  */
 int Index(HString S, HString T, int pos)
 {
@@ -175,6 +219,12 @@ int Index(HString S, HString T, int pos)
  * @param S 主串 S
  * @param T1 子串 T1
  * @param T2 子串 T2
+ *
+ * 算法实现:
+ * 1. 初始化 `pos` 为 `1`。
+ * 2. 循环查找 `T1` 在 `S` 中的位置 `idx`。
+ * 3. 若找到，删除 `T1` 并插入 `T2`，更新 `pos`。
+ * 4. 若未找到，退出循环。
  */
 void Replace(HString *S, HString T1, HString T2)
 {
@@ -194,6 +244,12 @@ void Replace(HString *S, HString T1, HString T2)
  * @param pos 插入位置
  * @param T 字符串 T
  * @return void
+ *
+ * 算法实现:
+ * 1. 检查 `pos` 的合法性。
+ * 2. 重新分配 `S` 的内存，使其能容纳插入后的内容。
+ * 3. 移动 `S` 的内容，为 `T` 腾出空间。
+ * 4. 将 `T` 的内容复制到 `S` 中，并更新 `length`。
  */
 void StrInsert(HString *S, int pos, HString T)
 {
@@ -214,6 +270,11 @@ void StrInsert(HString *S, int pos, HString T)
  * @param pos 删除位置
  * @param len 删除长度
  * @return void
+ *
+ * 算法实现:
+ * 1. 检查 `pos` 和 `len` 的合法性。
+ * 2. 移动 `S` 的内容，覆盖被删除的部分。
+ * 3. 重新分配 `S` 的内存，并更新 `length`。
  */
 void StrDelete(HString *S, int pos, int len)
 {
