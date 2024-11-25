@@ -86,6 +86,7 @@ Status Push(SqStack *S, SElemType e)
 {
     if (S->top - S->base >= S->stacksize)
     {
+        // 如果栈满，追加存储空间
         SElemType *newbase = (SElemType *)realloc(S->base,
                                                   (S->stacksize + STACKINCREMENT) * sizeof(SElemType));
         if (!newbase)

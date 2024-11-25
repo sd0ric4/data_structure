@@ -11,7 +11,7 @@ int main()
 
     // （1）数据准备
     StrAssign(&T1, "Hello");
-    StrAssign(&T2, "World");
+    StrAssign(&T2, "Hello");
     StrAssign(&T3, "C Programming");
     printf("T1: ");
     StrTraverse(T1);

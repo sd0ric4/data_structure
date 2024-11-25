@@ -40,6 +40,7 @@ typedef struct
 } SqQueue;
 
 // 栈操作函数声明
+
 Status InitStack(SqStack *S);
 Status ClearStack(SqStack *S);
 int StackLength(SqStack S);
@@ -48,6 +49,7 @@ Status Push(SqStack *S, SElemType e);
 Status Pop(SqStack *S, SElemType *e);
 
 // 队列操作函数声明
+
 Status InitQueue(SqQueue *Q);
 Status ClearQueue(SqQueue *Q);
 int QueueLength(SqQueue Q);
@@ -57,6 +59,7 @@ Status QueueEmpty(SqQueue Q);
 Status QueueFull(SqQueue Q);
 
 // 应用函数声明
+
 void Conversion(int m, int n);
 void QueueReverse(SqQueue *Q);
 
