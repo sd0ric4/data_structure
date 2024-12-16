@@ -1,0 +1,26 @@
+digraph G {
+    node [shape=circle];
+    "A" -> "A_left" [style=invis];
+    "A_left" [style=invis, width=0, height=0];
+    "A" -> "B" [label="R", color="red"];
+    "B" -> "B_left" [style=invis];
+    "B_left" [style=invis, width=0, height=0];
+    "B" -> "C" [label="R", color="red"];
+    "C" -> "C_left" [style=invis];
+    "C_left" [style=invis, width=0, height=0];
+    "C" -> "D" [label="R", color="red"];
+    "D" -> "D_left" [style=invis];
+    "D_left" [style=invis, width=0, height=0];
+    "D" -> "E" [label="R", color="red"];
+    "E" -> "E_left" [style=invis];
+    "E_left" [style=invis, width=0, height=0];
+    "E" -> "F" [label="R", color="red"];
+    "F" -> "F_left" [style=invis];
+    "F_left" [style=invis, width=0, height=0];
+    "F" -> "G" [label="R", color="red"];
+    "G" -> "G_left" [style=invis];
+    "G_left" [style=invis, width=0, height=0];
+    "G" -> "G_right" [style=invis];
+    "G_right" [style=invis, width=0, height=0];
+    "G";
+}
