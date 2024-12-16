@@ -72,6 +72,7 @@ void InOrderThreading(BiThrTree &Thrt, BiThrTree T)
     {
         Thrt->lchild = T;
         BiThrTree pre = Thrt;
+        // 递归中序线索化
         std::function<void(BiThrTree)> InThreading = [&](BiThrTree p)
         {
             if (p)
