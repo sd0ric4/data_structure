@@ -185,12 +185,14 @@ int TNodes(BiTree T, int d)
     if (!T)
         return 0;
     int count = 0;
+    // 判断规则：度为0且无左右孩子，或者度为1且只有左孩子或右孩子，或者度为2，说明是度为d的节点
     if ((d == 0 && !T->lchild && !T->rchild) ||
         (d == 1 && ((T->lchild && !T->rchild) || (!T->lchild && T->rchild))) ||
         (d == 2 && T->lchild && T->rchild))
     {
         count = 1;
     }
+    // 递归统计左子树和右子树中符合条件的节点数
     return count + TNodes(T->lchild, d) + TNodes(T->rchild, d);
 }
 
@@ -210,6 +212,7 @@ int High(BiTree T)
         return 0;
     int leftHeight = High(T->lchild);
     int rightHeight = High(T->rchild);
+    // 返回左右子树高度的最大值加1
     return std::max(leftHeight, rightHeight) + 1;
 }
 

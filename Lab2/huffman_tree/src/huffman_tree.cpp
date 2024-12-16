@@ -48,13 +48,16 @@ void Select(HTree HT, int n, int &s1, int &s2)
     s1 = s2 = -1;
     for (int i = 0; i < n; i++)
     {
+        // 在循环中，检查每个节点的父节点是否为空，如果为空，则检查权重是否小于s1和s2
         if (HT[i].parent == -1)
-        { // 未被选中的结点
+        {
+            // 如果s1为空或者当前节点的权重小于s1，则将s1赋值为当前节点
             if (s1 == -1 || HT[i].weight < HT[s1].weight)
             {
                 s2 = s1;
                 s1 = i;
             }
+            // 如果s2为空或者当前节点的权重小于s2，则将s2赋值为当前节点
             else if (s2 == -1 || HT[i].weight < HT[s2].weight)
             {
                 s2 = i;
