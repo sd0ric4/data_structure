@@ -115,6 +115,7 @@ void HTCoding(HTree HT, HTCode &HC, int n)
         int c = i;
         int p = HT[i].parent;
 
+        // 逆向追踪父节点，生成编码
         while (p != -1)
         {
             if (HT[p].lchild == c)
