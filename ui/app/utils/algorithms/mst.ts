@@ -43,7 +43,9 @@ export const primMST = (graph: MGraph): AnimationStep[] => {
   const closest = new Array(n).fill(0);
   const used = new Array(n).fill(false);
 
+  // 初始化第一个顶点
   used[0] = true;
+  lowcost[0] = 0; // 将起始顶点的 lowcost 设为 0
   for (let i = 1; i < n; i++) {
     lowcost[i] = graph.arcs[0][i];
     closest[i] = 0;
@@ -59,6 +61,7 @@ export const primMST = (graph: MGraph): AnimationStep[] => {
     let minCost = INFINITY;
     let minJ = -1;
 
+    // 寻找最小边
     for (let j = 0; j < n; j++) {
       if (!used[j] && lowcost[j] < minCost) {
         minCost = lowcost[j];
@@ -68,20 +71,24 @@ export const primMST = (graph: MGraph): AnimationStep[] => {
 
     if (minJ === -1) break;
 
+    // 将顶点加入生成树
     used[minJ] = true;
+    lowcost[minJ] = 0; // 将加入生成树的顶点的 lowcost 设为 0
+
     steps.push({
       type: 'add',
       edge: {
         start: closest[minJ],
         end: minJ,
-        weight: lowcost[minJ],
+        weight: minCost,
       },
-      message: `选择边 (${graph.vexs[closest[minJ]]},${graph.vexs[minJ]},${
-        lowcost[minJ]
-      })`,
+      message: `选择边 (${graph.vexs[closest[minJ]]},${
+        graph.vexs[minJ]
+      },${minCost})`,
       closedge: [...lowcost],
     });
 
+    // 更新其他顶点的最小权值
     for (let j = 0; j < n; j++) {
       if (!used[j] && graph.arcs[minJ][j] < lowcost[j]) {
         lowcost[j] = graph.arcs[minJ][j];
@@ -99,11 +106,53 @@ export const primMST = (graph: MGraph): AnimationStep[] => {
 };
 
 // Kruskal算法实现
+// 创建一个并查集类
+class UnionFind {
+  private parent: number[];
+  private size: number;
+
+  constructor(n: number) {
+    this.size = n;
+    this.parent = new Array(n).fill(0).map((_, i) => i);
+  }
+
+  // 查找根节点（带路径压缩）
+  find(x: number): number {
+    if (this.parent[x] !== x) {
+      this.parent[x] = this.find(this.parent[x]);
+    }
+    return this.parent[x];
+  }
+
+  // 合并两个集合
+  unite(x: number, y: number): void {
+    const rootX = this.find(x);
+    const rootY = this.find(y);
+    if (rootX !== rootY) {
+      // 总是让大编号指向小编号
+      if (rootX < rootY) {
+        this.parent[rootY] = rootX;
+      } else {
+        this.parent[rootX] = rootY;
+      }
+    }
+  }
+
+  // 获取当前连通分量标识数组
+  getCnvx(): number[] {
+    const cnvx = new Array(this.size);
+    for (let i = 0; i < this.size; i++) {
+      cnvx[i] = this.find(i);
+    }
+    return cnvx;
+  }
+}
+
 export const kruskalMST = (graph: MGraph): AnimationStep[] => {
   const steps: AnimationStep[] = [];
   const edges: Edge[] = [];
-  const parent = new Array(graph.vexnum).fill(-1);
 
+  // 收集所有边
   for (let i = 0; i < graph.vexnum; i++) {
     for (let j = i + 1; j < graph.vexnum; j++) {
       if (graph.arcs[i][j] !== INFINITY) {
@@ -112,29 +161,22 @@ export const kruskalMST = (graph: MGraph): AnimationStep[] => {
     }
   }
 
+  // 按权值排序
   edges.sort((a, b) => a.weight - b.weight);
+
+  // 创建并查集
+  const uf = new UnionFind(graph.vexnum);
+
   steps.push({
     type: 'compare',
     message: '对所有边按权值进行排序',
-    cnvx: [...parent],
+    cnvx: uf.getCnvx(),
   });
 
-  const find = (x: number): number => {
-    if (parent[x] === -1) return x;
-    return (parent[x] = find(parent[x]));
-  };
-
-  const union = (x: number, y: number): void => {
-    const px = find(x);
-    const py = find(y);
-    if (px !== py) {
-      parent[px] = py;
-    }
-  };
-
+  let selectedEdges = 0;
   for (const edge of edges) {
-    const x = find(edge.start);
-    const y = find(edge.end);
+    const startRoot = uf.find(edge.start);
+    const endRoot = uf.find(edge.end);
 
     steps.push({
       type: 'compare',
@@ -142,19 +184,29 @@ export const kruskalMST = (graph: MGraph): AnimationStep[] => {
       message: `检查边 (${graph.vexs[edge.start]},${graph.vexs[edge.end]},${
         edge.weight
       })`,
-      cnvx: [...parent],
+      cnvx: uf.getCnvx(),
     });
 
-    if (x !== y) {
-      union(edge.start, edge.end);
+    if (startRoot !== endRoot) {
+      uf.unite(edge.start, edge.end);
       steps.push({
         type: 'add',
         edge,
-        message: `添加边 (${graph.vexs[edge.start]},${graph.vexs[edge.end]},${
+        message: `选中边 (${graph.vexs[edge.start]},${graph.vexs[edge.end]},${
           edge.weight
         })`,
-        cnvx: [...parent],
+        cnvx: uf.getCnvx(),
       });
+
+      selectedEdges++;
+      if (selectedEdges === graph.vexnum - 1) {
+        steps.push({
+          type: 'compare',
+          message: '最小生成树构建完成',
+          cnvx: uf.getCnvx(),
+        });
+        break;
+      }
     }
   }
 

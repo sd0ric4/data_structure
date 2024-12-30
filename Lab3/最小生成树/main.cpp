@@ -38,11 +38,72 @@ typedef struct
 // 边的结构，用于Kruskal算法
 typedef struct
 {
-    int begin;  // 起点下标
-    int end;    // 终点下标
-    int weight; // 权重
+    int begin;
+    int end;
+    int weight;
 } Edge;
 
+// 并查集数据结构
+class UnionFind
+{
+private:
+    int *parent;
+    int size;
+
+public:
+    UnionFind(int n)
+    {
+        size = n;
+        parent = new int[n];
+        for (int i = 0; i < n; i++)
+        {
+            parent[i] = i;
+        }
+    }
+
+    ~UnionFind()
+    {
+        delete[] parent;
+    }
+
+    // 查找根节点（带路径压缩）
+    int find(int x)
+    {
+        if (parent[x] != x)
+        {
+            parent[x] = find(parent[x]);
+        }
+        return parent[x];
+    }
+
+    // 合并两个集合
+    void unite(int x, int y)
+    {
+        int rootX = find(x);
+        int rootY = find(y);
+        if (rootX != rootY)
+        {
+            // 总是让大编号指向小编号
+            if (rootX < rootY)
+            {
+                parent[rootY] = rootX;
+            }
+            else
+            {
+                parent[rootX] = rootY;
+            }
+        }
+    }
+
+    // 获取当前连通分量标识数组
+    void getCnvx(int *cnvx)
+    {
+        for (int i = 0; i < size; i++)
+        {
+            cnvx[i] = find(i);
+        }
+    }
+};
 // 创建图
 void CreateMGraph(GraphKind GKind, MGraph &G, int vexnum, int arcnum, char *vexs, int *arcs)
 {
@@ -61,10 +122,7 @@ void CreateMGraph(GraphKind GKind, MGraph &G, int vexnum, int arcnum, char *vexs
     {
         for (int j = 0; j < vexnum; j++)
         {
-            if (GKind == DG || GKind == UDG)
-                G.arcs[i][j].adj = 0;
-            else
-                G.arcs[i][j].adj = INFINITY;
+            G.arcs[i][j].adj = (GKind == DG || GKind == UDG) ? 0 : INFINITY;
             G.arcs[i][j].info = nullptr;
         }
     }
@@ -112,11 +170,10 @@ void MiniSpanTree_Prim(MGraph G, VertexType u)
             break;
     }
 
-    // 辅助数组，记录当前生成树到其余顶点的最小边
     struct
     {
-        VertexType adjvex; // 最小边在生成树上的顶点
-        int lowcost;       // 最小边上的权值
+        VertexType adjvex;
+        int lowcost;
     } closedge[MAX_VERTEX_NUM];
 
     // 初始化辅助数组
@@ -128,9 +185,8 @@ void MiniSpanTree_Prim(MGraph G, VertexType u)
             closedge[i].lowcost = G.arcs[k][i].adj;
         }
     }
-    closedge[k].lowcost = 0; // 起始顶点放入树中
+    closedge[k].lowcost = 0;
 
-    // 输出数组初始状态
     cout << "初始closedge数组：";
     for (int i = 0; i < G.vexnum; i++)
     {
@@ -141,7 +197,7 @@ void MiniSpanTree_Prim(MGraph G, VertexType u)
     }
     cout << endl;
 
-    // 选择其余n-1个顶点
+    // 选择其余顶点
     for (int i = 1; i < G.vexnum; i++)
     {
         int min = INFINITY;
@@ -157,12 +213,12 @@ void MiniSpanTree_Prim(MGraph G, VertexType u)
             }
         }
 
-        // 输出找到的最小生成边
-        cout << "(" << closedge[j].adjvex << "," << G.vexs[j] << "," << closedge[j].lowcost << ")" << endl;
+        cout << "(" << closedge[j].adjvex << "," << G.vexs[j] << ","
+             << closedge[j].lowcost << ")" << endl;
 
-        closedge[j].lowcost = 0; // 标记j号顶点已经加入生成树
+        closedge[j].lowcost = 0;
 
-        // 更新其他顶点的最小边
+        // 更新最小边
         for (int w = 0; w < G.vexnum; w++)
         {
             if (G.arcs[j][w].adj < closedge[w].lowcost)
@@ -172,7 +228,6 @@ void MiniSpanTree_Prim(MGraph G, VertexType u)
             }
         }
 
-        // 输出更新后的数组状态
         cout << "更新后的closedge数组：";
         for (int w = 0; w < G.vexnum; w++)
         {
@@ -185,22 +240,12 @@ void MiniSpanTree_Prim(MGraph G, VertexType u)
     }
 }
 
-// 查找连通分量的根节点
-int Find(int *parent, int f)
-{
-    while (parent[f] > 0)
-    {
-        f = parent[f];
-    }
-    return f;
-}
-
-// Kruskal算法实现最小生成树
 void MiniSpanTree_Kruskal(MGraph G)
 {
     cout << "\nKruskal算法生成最小生成树：\n";
     Edge edges[MAX_EDGE_NUM];
     int edgeCount = 0;
+    int *cnvx = new int[G.vexnum];
 
     // 收集所有边
     for (int i = 0; i < G.vexnum; i++)
@@ -217,12 +262,10 @@ void MiniSpanTree_Kruskal(MGraph G)
         }
     }
 
-    // 对边按权重排序
     sort(edges, edges + edgeCount,
          [](Edge a, Edge b)
          { return a.weight < b.weight; });
 
-    // 输出排序后的边
     cout << "排序后的边：\n";
     for (int i = 0; i < edgeCount; i++)
     {
@@ -231,71 +274,56 @@ void MiniSpanTree_Kruskal(MGraph G)
              << edges[i].weight << ")" << endl;
     }
 
-    int *parent = new int[G.vexnum](); // 连通分量数组
-    for (int i = 0; i < G.vexnum; i++)
-    {
-        parent[i] = 0;
-    }
+    UnionFind uf(G.vexnum);
 
-    // 从小到大选择边
-    int num = 0; // 当前选中的边数
-    int i = 0;   // 边的指针
-    while (num < G.vexnum - 1)
+    int selectedEdges = 0;
+    for (int i = 0; i < edgeCount && selectedEdges < G.vexnum - 1; i++)
     {
-        int n = Find(parent, edges[i].begin);
-        int m = Find(parent, edges[i].end);
-        if (n != m)
-        {                  // 不会形成回路
-            parent[n] = m; // 合并连通分量
-            cout << "选中边：(" << G.vexs[edges[i].begin] << ","
-                 << G.vexs[edges[i].end] << ","
+        int begin = edges[i].begin;
+        int end = edges[i].end;
+
+        if (uf.find(begin) != uf.find(end))
+        {
+            uf.unite(begin, end);
+            cout << "选中边：(" << G.vexs[begin] << ","
+                 << G.vexs[end] << ","
                  << edges[i].weight << ")" << endl;
 
-            // 输出连通分量数组
-            cout << "连通分量数组：";
+            // 获取并显示连通分量数组
+            uf.getCnvx(cnvx);
+            cout << "连通分量数组 cnvx[]: ";
             for (int j = 0; j < G.vexnum; j++)
             {
-                cout << parent[j] << " ";
+                cout << cnvx[j] << " ";
             }
             cout << endl;
 
-            num++;
+            selectedEdges++;
         }
-        i++;
     }
 
-    delete[] parent;
+    delete[] cnvx;
 }
-
 int main()
 {
     MGraph G;
-
-    // 创建图的顶点和边
     char vexs[] = {'A', 'B', 'C', 'D', 'E', 'F'};
     int arcs[] = {
-        0, 1, 6, // A-B,6
-        0, 2, 1, // A-C,1
-        0, 3, 5, // A-D,5
-        1, 2, 5, // B-C,5
-        1, 4, 3, // B-E,3
-        2, 3, 5, // C-D,5
-        2, 4, 6, // C-E,6
-        2, 5, 4, // C-F,4
-        3, 5, 2, // D-F,2
-        4, 5, 6  // E-F,6
+        0, 1, 10, // A-B,10
+        0, 2, 12, // A-C,12
+        0, 4, 15, // A-E,15
+        1, 2, 7,  // B-C,7
+        1, 3, 5,  // B-D,5
+        1, 5, 6,  // B-F,6
+        2, 4, 12, // C-E,12
+        2, 5, 8,  // C-F,8
+        3, 5, 6,  // D-F,6
+        4, 5, 10  // E-F,10
     };
 
-    // 创建无向网
     CreateMGraph(UDN, G, 6, 10, vexs, arcs);
-
-    // 输出邻接矩阵
     OutMGraph(G);
-
-    // 使用Prim算法求最小生成树
     MiniSpanTree_Prim(G, 'A');
-
-    // 使用Kruskal算法求最小生成树
     MiniSpanTree_Kruskal(G);
 
     return 0;

@@ -37,7 +37,10 @@ const MSTVisualizer: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(-1);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [animationSpeed, setAnimationSpeed] = useState<number>(1000);
-
+  const [listText, setListText] = useState<string>(
+    'A: B(6), C(1), D(5)\nB: A(6), C(5), E(3)\nC: A(1), B(5), D(5), E(6), F(4)\nD: A(5), C(5), F(2)\nE: B(3), C(6), F(6)\nF: C(4), D(2), E(6)'
+  );
+  const [error, setError] = useState<string>('');
   // 初始化示例图
   useEffect(() => {
     const exampleGraph: MGraph = {
@@ -73,6 +76,66 @@ const MSTVisualizer: React.FC = () => {
       if (intervalId) clearInterval(intervalId);
     };
   }, [isPlaying, currentStep, animationSteps.length, animationSpeed]);
+  // 添加解析邻接表的函数
+  const parseAdjList = (text: string): void => {
+    try {
+      const lines = text.trim().split('\n');
+      const vertices = lines.map((line) => line.split(':')[0].trim());
+      const n = vertices.length;
+
+      // 创建邻接矩阵
+      const matrix: number[][] = Array(n)
+        .fill(0)
+        .map(() => Array(n).fill(INFINITY));
+
+      // 解析每一行
+      lines.forEach((line, i) => {
+        const [vertex, edgesStr] = line.split(':');
+        if (!edgesStr) return;
+
+        // 解析边信息
+        const edges = edgesStr
+          .trim()
+          .split(',')
+          .map((e) => e.trim());
+        edges.forEach((edge) => {
+          // 匹配形如 "B(6)" 的格式
+          const matches = edge.match(/([A-Za-z0-9])\((\d+)\)/);
+          if (!matches) throw new Error('边格式错误');
+
+          const [_, destVertex, weight] = matches;
+          const j = vertices.indexOf(destVertex);
+          if (j === -1) throw new Error(`未找到顶点 ${destVertex}`);
+
+          matrix[i][j] = parseInt(weight);
+          matrix[j][i] = parseInt(weight); // 无向图需要对称
+        });
+      });
+
+      // 创建新图
+      const newGraph: MGraph = {
+        vexs: vertices,
+        arcs: matrix,
+        vexnum: n,
+        arcnum: matrix.reduce(
+          (acc, row, i) =>
+            acc +
+            row.reduce(
+              (sum, val, j) => sum + (i < j && val !== INFINITY ? 1 : 0),
+              0
+            ),
+          0
+        ),
+        kind: GraphKind.UDN,
+      };
+
+      setGraph(newGraph);
+      setError('');
+      resetAnimation();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '输入格式错误');
+    }
+  };
 
   // 开始动画
   const startAnimation = () => {
@@ -178,7 +241,30 @@ const MSTVisualizer: React.FC = () => {
               最小生成树算法演示
             </h1>
           </div>
-
+          <div className='mb-6'>
+            <div className='flex flex-col gap-2'>
+              <label className='text-sm font-medium text-gray-700'>
+                输入邻接表:
+              </label>
+              <textarea
+                value={listText}
+                onChange={(e) => {
+                  setListText(e.target.value);
+                  parseAdjList(e.target.value);
+                }}
+                className='w-full h-32 p-3 font-mono text-sm bg-white border rounded-lg'
+                placeholder={`格式示例：
+A: B(6), C(1), D(5)
+B: A(6), C(5), E(3)
+...`}
+              />
+              {error && (
+                <div className='p-3 bg-red-50 text-red-700 rounded-lg text-sm'>
+                  {error}
+                </div>
+              )}
+            </div>
+          </div>
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
             <div className='space-y-6'>
               <div className='flex gap-4'>
