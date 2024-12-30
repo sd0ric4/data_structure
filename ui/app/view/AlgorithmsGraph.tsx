@@ -4,38 +4,15 @@ import { Button } from '~/components/ui/button';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '~/components/ui/alert';
 const MAX_VERTEX_NUM = 20;
-
-enum GraphKind {
-  DG,
-  DN,
-  UDG,
-  UDN,
-}
-
-interface ArcNode {
-  adjvex: number;
-  nextarc: ArcNode | null;
-  weight: number;
-}
-
-interface VNode {
-  data: string;
-  firstarc: ArcNode | null;
-}
-
-interface ALGraph {
-  vertices: VNode[];
-  vexnum: number;
-  arcnum: number;
-  kind: GraphKind;
-}
-
-interface AnimationStep {
-  type: 'visit' | 'edge';
-  from?: number;
-  to?: number;
-  node?: number;
-}
+import {
+  DFSTraverse,
+  BFSTraverse,
+  GraphKind,
+  type ALGraph,
+  type AnimationStep,
+  type ArcNode,
+  type VNode,
+} from '~/utils/algorithms/AlgorithmsGraph';
 
 const EDGE_COLORS = [
   'stroke-rose-500',
@@ -57,64 +34,6 @@ const getEdgeColor = (index: number): string =>
   EDGE_COLORS[index % EDGE_COLORS.length];
 const getTextColor = (index: number): string =>
   TEXT_COLORS[index % TEXT_COLORS.length];
-
-const DFSTraverse = (G: ALGraph): AnimationStep[] => {
-  const visited = new Array(G.vexnum).fill(false);
-  const steps: AnimationStep[] = [];
-
-  const DFS = (v: number) => {
-    visited[v] = true;
-    steps.push({ type: 'visit', node: v });
-
-    let p = G.vertices[v].firstarc;
-    while (p) {
-      if (!visited[p.adjvex]) {
-        steps.push({ type: 'edge', from: v, to: p.adjvex });
-        DFS(p.adjvex);
-      }
-      p = p.nextarc;
-    }
-  };
-
-  for (let v = 0; v < G.vexnum; v++) {
-    if (!visited[v]) {
-      DFS(v);
-    }
-  }
-
-  return steps;
-};
-
-const BFSTraverse = (G: ALGraph): AnimationStep[] => {
-  const visited = new Array(G.vexnum).fill(false);
-  const steps: AnimationStep[] = [];
-  const queue: number[] = [];
-
-  for (let v = 0; v < G.vexnum; v++) {
-    if (!visited[v]) {
-      visited[v] = true;
-      steps.push({ type: 'visit', node: v });
-      queue.push(v);
-
-      while (queue.length > 0) {
-        const u = queue.shift()!;
-        let p = G.vertices[u].firstarc;
-
-        while (p) {
-          if (!visited[p.adjvex]) {
-            visited[p.adjvex] = true;
-            steps.push({ type: 'edge', from: u, to: p.adjvex });
-            steps.push({ type: 'visit', node: p.adjvex });
-            queue.push(p.adjvex);
-          }
-          p = p.nextarc;
-        }
-      }
-    }
-  }
-
-  return steps;
-};
 
 const calculateLayout = (nodes: number) => {
   const positions: { x: number; y: number }[] = [];

@@ -508,7 +508,12 @@ const BinarySearchTree: React.FC = () => {
                     transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                   }}
                 >
-                  <svg className='absolute' width='2400' height='1200'>
+                  <svg
+                    className='absolute'
+                    width='2400'
+                    height='1200'
+                    style={{ overflow: 'visible' }}
+                  >
                     {edges.map((edge, index) => (
                       <line
                         key={index}
