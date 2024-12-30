@@ -2,6 +2,6 @@
 **/cache/
 .DS_Store
 **/node_modules/
-
+**/*.o
 # React Router
 **/.react-router/
