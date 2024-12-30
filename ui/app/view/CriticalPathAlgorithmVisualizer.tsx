@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '~/components/ui/card';
+import { Card } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { Play, Pause, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '~/components/ui/alert';

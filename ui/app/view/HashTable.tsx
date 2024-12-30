@@ -18,6 +18,7 @@ interface LinkedItem {
 interface HashChain {
   items: LinkedItem[];
   isActive: boolean;
+  activeItemIndex: number; // 新增
 }
 
 const HASH_SIZE = 13;
@@ -54,7 +55,7 @@ const HashTableVisual: React.FC = () => {
   const [chainTable, setChainTable] = useState<HashChain[]>(
     Array(HASH_SIZE)
       .fill(null)
-      .map(() => ({ items: [], isActive: false }))
+      .map(() => ({ items: [], isActive: false, activeItemIndex: -1 }))
   );
 
   // 哈希函数
@@ -81,11 +82,12 @@ const HashTableVisual: React.FC = () => {
 
   // 初始化链地址法哈希表
   const initChainTable = () => {
-    const newTable: HashChain[] = Array(HASH_SIZE) // 注意这里使用 HASH_SIZE 而不是 TABLE_SIZE
+    const newTable: HashChain[] = Array(HASH_SIZE)
       .fill(null)
       .map(() => ({
-        items: [], // HashChain 类型需要 items 数组
+        items: [],
         isActive: false,
+        activeItemIndex: -1, // 新增
       }));
 
     initialKeys.forEach((key) => {
@@ -128,6 +130,7 @@ const HashTableVisual: React.FC = () => {
   };
 
   // 链地址法查找
+
   const searchChain = async (key: number) => {
     setIsSearching(true);
     setComparisons(0);
@@ -135,21 +138,28 @@ const HashTableVisual: React.FC = () => {
     const index = hash(key);
     setActiveIndex(index);
 
-    const chain = chainTable[index];
+    const newTable = [...chainTable];
 
-    for (let i = 0; i < chain.items.length; i++) {
+    for (let i = 0; i < newTable[index].items.length; i++) {
+      // 设置当前正在比较的项的索引
+      newTable[index].activeItemIndex = i;
+      setChainTable(newTable);
+
       setComparisons((prev) => prev + 1);
       await new Promise((resolve) => setTimeout(resolve, ANIMATION_SPEED));
 
-      if (chain.items[i].key === key) {
-        const newTable = [...chainTable];
+      if (newTable[index].items[i].key === key) {
         newTable[index].items[i].isActive = true;
+        newTable[index].activeItemIndex = -1; // 重置活跃索引
         setChainTable(newTable);
         setIsSearching(false);
         return true;
       }
     }
 
+    // 搜索结束后重置活跃索引
+    newTable[index].activeItemIndex = -1;
+    setChainTable(newTable);
     setIsSearching(false);
     return false;
   };
@@ -262,12 +272,9 @@ const HashTableVisual: React.FC = () => {
                         {chain.items.map((item, itemIndex) => (
                           <React.Fragment key={itemIndex}>
                             <div
-                              className={`p-2 border-2 rounded-lg
-                                ${
-                                  item.isActive
-                                    ? 'bg-green-100 border-green-500'
-                                    : 'border-blue-500'
-                                }`}
+                              className={`p-2 border-2 rounded-lg transition-colors duration-300
+        ${itemIndex === chain.activeItemIndex ? 'bg-yellow-100' : ''}
+        ${item.isActive ? 'bg-green-100 border-green-500' : 'border-blue-500'}`}
                             >
                               {item.key}
                             </div>

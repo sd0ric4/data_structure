@@ -1,15 +1,12 @@
 #include <iostream>
-#include <stack>
 #include <queue>
+#include <vector>
 using namespace std;
 
 const int MAX_VERTEX = 20;
 const int INFINITY = 10000;
 
-// 继承原有的图结构定义
-// ...（省略已有的结构定义，使用原文件中的定义）
-#define MAX_VERTEX_NUM 20
-typedef int Status;
+// 图的类型枚举
 typedef enum
 {
     DG,
@@ -17,283 +14,225 @@ typedef enum
     UDG,
     UDN
 } GraphKind;
-typedef char VertexType;
 
-// 边(弧)结点
-typedef struct ArcNode
+// 边节点结构
+struct ArcNode
 {
-    int adjvex;              // 邻接点在顶点数组中的下标
-    struct ArcNode *nextarc; // 指向下一条边的指针
-    int weight;              // 边的权值
-} ArcNode;
+    int targetVertex; // 目标顶点的索引
+    ArcNode *next;    // 下一条边
+    int duration;     // 活动持续时间（权值）
+};
 
-// 顶点结点
-typedef struct VNode
+// 顶点节点结构
+struct Vertex
 {
-    VertexType data;   // 顶点数据
-    ArcNode *firstarc; // 指向第一条依附该顶点的边的指针
-} VNode, AdjList[MAX_VERTEX_NUM];
+    char name;         // 顶点名称
+    ArcNode *firstArc; // 第一条边
 
-// 图的邻接表结构
-typedef struct
-{
-    AdjList vertices;   // 顶点数组
-    int vexnum, arcnum; // 顶点数和边数
-    GraphKind kind;     // 图的类型
-} ALGraph;
+    // 前向传播相关
+    int earliestStart; // 最早开始时间
+    int inDegree;      // 入度（用于前向传播）
 
-// 创建图的邻接表
-void CreateALGraph(GraphKind GKind, ALGraph &G, int vexnum, int arcnum, char *vexs, int *arcs)
-{
-    G.vexnum = vexnum;
-    G.arcnum = arcnum;
-    G.kind = GKind;
+    // 反向传播相关
+    int latestStart; // 最迟开始时间
+};
 
-    // 初始化顶点数组
-    for (int i = 0; i < vexnum; i++)
-    {
-        G.vertices[i].data = vexs[i];
-        G.vertices[i].firstarc = nullptr;
-    }
-
-    // 创建边结点
-    for (int k = 0; k < arcnum; k++)
-    {
-        int i = arcs[k * 3];     // 起点下标
-        int j = arcs[k * 3 + 1]; // 终点下标
-        int w = arcs[k * 3 + 2]; // 权值
-
-        // 创建边结点i->j
-        ArcNode *p = new ArcNode;
-        p->adjvex = j;
-        p->weight = w;
-        p->nextarc = G.vertices[i].firstarc;
-        G.vertices[i].firstarc = p;
-
-        // 如果是无向图/网，需要增加边结点j->i
-        if (GKind == UDG || GKind == UDN)
-        {
-            ArcNode *q = new ArcNode;
-            q->adjvex = i;
-            q->weight = w;
-            q->nextarc = G.vertices[j].firstarc;
-            G.vertices[j].firstarc = q;
-        }
-    }
-}
-
-// 输出图的邻接表
-// 修改输出图的邻接表函数
-void OutALGraph(ALGraph G)
-{
-    cout << "\n图的邻接表：" << endl;
-    for (int i = 0; i < G.vexnum; i++)
-    {
-        cout << G.vertices[i].data << ": "; // 打印顶点
-        ArcNode *p = G.vertices[i].firstarc;
-        while (p)
-        {
-            if (G.kind == DN || G.kind == UDN)
-            {
-                cout << G.vertices[p->adjvex].data << "(" << p->weight << ")";
-            }
-            else
-            {
-                cout << G.vertices[p->adjvex].data;
-            }
-
-            if (p->nextarc)
-            {
-                cout << ", "; // 如果不是最后一个邻接点，加逗号分隔
-            }
-            p = p->nextarc;
-        }
-        cout << endl; // 每个顶点的邻接表占一行
-    }
-}
-
-// 关键路径相关的新函数
-class CriticalPath
+// 图结构
+class ActivityNetwork
 {
 private:
-    ALGraph &G;
-    int *ve;       // 事件最早发生时间
-    int *vl;       // 事件最迟发生时间
-    int *indegree; // 入度数组
+    vector<Vertex> vertices;
+    int vertexCount, arcCount;
+    GraphKind kind;
 
 public:
-    CriticalPath(ALGraph &graph) : G(graph)
+    // 构造函数
+    ActivityNetwork(int vCount) : vertexCount(vCount)
     {
-        ve = new int[G.vexnum]();
-        vl = new int[G.vexnum];
-        indegree = new int[G.vexnum]();
-
-        // 初始化vl数组为无穷大
-        for (int i = 0; i < G.vexnum; i++)
+        vertices.resize(vCount);
+        for (auto &vertex : vertices)
         {
-            vl[i] = INFINITY;
+            vertex.firstArc = nullptr;
+            vertex.earliestStart = 0;
+            vertex.latestStart = INFINITY;
+            vertex.inDegree = 0;
         }
     }
 
-    ~CriticalPath()
+    // 创建活动网络
+    void createNetwork(char *names, int *arcs, int arcCount)
     {
-        delete[] ve;
-        delete[] vl;
-        delete[] indegree;
+        // 初始化顶点
+        for (int i = 0; i < vertexCount; i++)
+        {
+            vertices[i].name = names[i];
+        }
+
+        // 创建边并计算入度
+        for (int i = 0; i < arcCount; i++)
+        {
+            int from = arcs[i * 3];
+            int to = arcs[i * 3 + 1];
+            int duration = arcs[i * 3 + 2];
+
+            // 创建新边
+            ArcNode *newArc = new ArcNode{to, vertices[from].firstArc, duration};
+            vertices[from].firstArc = newArc;
+
+            // 更新入度
+            vertices[to].inDegree++;
+        }
     }
 
-    // 计算入度
-    void computeIndegree()
+    // 前向传播 - 计算最早开始时间
+    void forwardPropagation()
     {
-        for (int i = 0; i < G.vexnum; i++)
+        cout << "\n开始前向传播 - 计算最早开始时间：" << endl;
+        queue<int> zeroInDegree;
+        vector<int> inDegree = getInDegrees();
+
+        // 找出所有入度为0的顶点
+        for (int i = 0; i < vertexCount; i++)
         {
-            ArcNode *p = G.vertices[i].firstarc;
-            while (p)
+            if (inDegree[i] == 0)
             {
-                indegree[p->adjvex]++;
-                p = p->nextarc;
+                zeroInDegree.push(i);
             }
         }
-    }
 
-    // 拓扑排序，同时计算ve值
-    bool topologicalSort(stack<int> &topologicalStack)
-    {
-        computeIndegree();
-        queue<int> zeroInDegreeVertices;
-
-        // 将入度为0的顶点入队
-        for (int currentVertex = 0; currentVertex < G.vexnum; currentVertex++)
+        // 前向传播过程
+        while (!zeroInDegree.empty())
         {
-            if (indegree[currentVertex] == 0)
-            {
-                zeroInDegreeVertices.push(currentVertex);
-            }
-        }
+            int current = zeroInDegree.front();
+            zeroInDegree.pop();
 
-        int processedVertexCount = 0;
-        while (!zeroInDegreeVertices.empty())
-        {
-            int currentVertex = zeroInDegreeVertices.front();
-            zeroInDegreeVertices.pop();
-            topologicalStack.push(currentVertex); // 将顶点入栈，用于后续逆序遍历
-            processedVertexCount++;
+            cout << "处理顶点 " << vertices[current].name
+                 << " 最早开始时间: " << vertices[current].earliestStart << endl;
 
-            // 遍历当前顶点的所有邻接点
-            ArcNode *adjacentArc = G.vertices[currentVertex].firstarc;
-            while (adjacentArc)
+            // 更新所有后继顶点
+            for (ArcNode *arc = vertices[current].firstArc; arc; arc = arc->next)
             {
-                int adjacentVertex = adjacentArc->adjvex;
-                indegree[adjacentVertex]--;
-                if (indegree[adjacentVertex] == 0)
+                int next = arc->targetVertex;
+                // 更新最早开始时间（类似于神经网络中的前向传播）
+                vertices[next].earliestStart = max(
+                    vertices[next].earliestStart,
+                    vertices[current].earliestStart + arc->duration);
+
+                // 减少入度，当入度为0时加入队列
+                if (--inDegree[next] == 0)
                 {
-                    zeroInDegreeVertices.push(adjacentVertex);
+                    zeroInDegree.push(next);
                 }
-                // 计算最早发生时间
-                if (ve[currentVertex] + adjacentArc->weight > ve[adjacentVertex])
-                {
-                    ve[adjacentVertex] = ve[currentVertex] + adjacentArc->weight;
-                }
-                adjacentArc = adjacentArc->nextarc;
             }
         }
-
-        return processedVertexCount == G.vexnum;
     }
-    bool criticalPath()
+
+    // 反向传播 - 计算最迟开始时间
+    void backwardPropagation()
     {
-        stack<int> topologicalStack;
-        if (!topologicalSort(topologicalStack))
+        cout << "\n开始反向传播 - 计算最迟开始时间：" << endl;
+
+        // 找到最大的最早开始时间（项目总工期）
+        int maxEarliestStart = 0;
+        for (const auto &vertex : vertices)
         {
-            cout << "图中存在环，无法求关键路径！" << endl;
-            return false;
+            maxEarliestStart = max(maxEarliestStart, vertex.earliestStart);
         }
 
-        // 初始化最迟发生时间
-        int maxEarliestTime = 0;
-        for (int vertex = 0; vertex < G.vexnum; vertex++)
+        // 初始化所有顶点的最迟开始时间
+        for (auto &vertex : vertices)
         {
-            if (ve[vertex] > maxEarliestTime)
-                maxEarliestTime = ve[vertex];
-        }
-        for (int vertex = 0; vertex < G.vexnum; vertex++)
-        {
-            vl[vertex] = maxEarliestTime;
+            vertex.latestStart = maxEarliestStart;
         }
 
-        // 按拓扑排序的逆序求各顶点的最迟发生时间
-        while (!topologicalStack.empty())
+        // 反向遍历所有顶点（从后向前）
+        for (int i = vertexCount - 1; i >= 0; i--)
         {
-            int currentVertex = topologicalStack.top();
-            topologicalStack.pop();
+            cout << "处理顶点 " << vertices[i].name
+                 << " 最迟开始时间: " << vertices[i].latestStart << endl;
 
-            ArcNode *adjacentArc = G.vertices[currentVertex].firstarc;
-            while (adjacentArc)
+            // 更新所有前驱顶点的最迟开始时间
+            for (int j = 0; j < vertexCount; j++)
             {
-                int adjacentVertex = adjacentArc->adjvex;
-                if (vl[adjacentVertex] - adjacentArc->weight < vl[currentVertex])
+                for (ArcNode *arc = vertices[j].firstArc; arc; arc = arc->next)
                 {
-                    vl[currentVertex] = vl[adjacentVertex] - adjacentArc->weight;
+                    if (arc->targetVertex == i)
+                    {
+                        // 反向更新最迟开始时间（类似于神经网络中的反向传播）
+                        vertices[j].latestStart = min(
+                            vertices[j].latestStart,
+                            vertices[i].latestStart - arc->duration);
+                    }
                 }
-                adjacentArc = adjacentArc->nextarc;
             }
         }
+    }
 
-        // 输出关键路径
-        cout << "\n关键路径为：" << endl;
-        // sourceVertex是起点，targetVertex是终点
-        for (int sourceVertex = 0; sourceVertex < G.vexnum; sourceVertex++)
+    // 输出关键路径
+    void findCriticalPath()
+    {
+        cout << "\n关键路径（关键活动）：" << endl;
+        for (int i = 0; i < vertexCount; i++)
         {
-            ArcNode *adjacentArc = G.vertices[sourceVertex].firstarc;
-            while (adjacentArc)
+            for (ArcNode *arc = vertices[i].firstArc; arc; arc = arc->next)
             {
-                int targetVertex = adjacentArc->adjvex;
-                int earliestStartTime = ve[sourceVertex];                     // 活动最早开始时间
-                int latestStartTime = vl[targetVertex] - adjacentArc->weight; // 活动最迟开始时间
-
-                if (earliestStartTime == latestStartTime)
-                { // 说明该活动是关键活动
-                    cout << G.vertices[sourceVertex].data << " -> "
-                         << G.vertices[targetVertex].data << " [权值="
-                         << adjacentArc->weight << "]" << endl;
+                // 如果活动的最早开始时间等于最迟开始时间，则为关键活动
+                if (vertices[i].earliestStart ==
+                    vertices[arc->targetVertex].latestStart - arc->duration)
+                {
+                    cout << vertices[i].name << " -> "
+                         << vertices[arc->targetVertex].name
+                         << " (持续时间: " << arc->duration << ")" << endl;
                 }
-                adjacentArc = adjacentArc->nextarc;
             }
         }
-        return true;
+    }
+
+private:
+    // 获取所有顶点的入度
+    vector<int> getInDegrees()
+    {
+        vector<int> inDegree(vertexCount, 0);
+        for (int i = 0; i < vertexCount; i++)
+        {
+            for (ArcNode *arc = vertices[i].firstArc; arc; arc = arc->next)
+            {
+                inDegree[arc->targetVertex]++;
+            }
+        }
+        return inDegree;
     }
 };
 
 int main()
 {
-    ALGraph G;
-
-    // 创建AOE网
+    // 创建示例网络
     char vexs[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'};
     int arcs[] = {
-        0, 1, 8,  // A->B (a0=8)
-        0, 2, 6,  // A->C (a1=6)
-        0, 4, 7,  // A->E (a2=7)
-        1, 3, 3,  // B->D (a3=3)
-        2, 3, 10, // C->D (a4=10)
-        2, 6, 9,  // C->G (a5=9)
-        4, 6, 9,  // E->G (a6=9)
-        4, 7, 13, // E->H (a7=13)
-        3, 5, 4,  // D->F (a8=4)
-        3, 8, 19, // D->I (a9=19)
-        6, 7, 2,  // G->H (a11=2)
-        6, 8, 8,  // G->I (a10=8)
-        7, 8, 6,  // H->I (a12=6)
-        5, 9, 14, // F->J (a13=14)
-        8, 9, 10  // I->J (a14=10)
+        0, 1, 8,  // A->B (8天)
+        0, 2, 6,  // A->C (6天)
+        0, 4, 7,  // A->E (7天)
+        1, 3, 3,  // B->D (3天)
+        2, 3, 10, // C->D (10天)
+        2, 6, 9,  // C->G (9天)
+        4, 6, 9,  // E->G (9天)
+        4, 7, 13, // E->H (13天)
+        3, 5, 4,  // D->F (4天)
+        3, 8, 19, // D->I (19天)
+        6, 7, 2,  // G->H (2天)
+        6, 8, 8,  // G->I (8天)
+        7, 8, 6,  // H->I (6天)
+        5, 9, 14, // F->J (14天)
+        8, 9, 10  // I->J (10天)
     };
 
-    CreateALGraph(DN, G, 10, 15, vexs, arcs);
-    cout << "创建的AOE网：" << endl;
-    OutALGraph(G);
+    ActivityNetwork network(10);
+    network.createNetwork(vexs, arcs, 15);
 
-    CriticalPath cp(G);
-    cp.criticalPath();
+    // 执行前向传播和反向传播
+    network.forwardPropagation();
+    network.backwardPropagation();
+    network.findCriticalPath();
 
     return 0;
 }
